@@ -1,0 +1,62 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --navy-950: #060d1a;
+  --navy-900: #0a1428;
+  --navy-800: #101d36;
+  --navy-700: #16294a;
+  --gold-400: #d4af37;
+  --gold-500: #c9a227;
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  background: var(--navy-950);
+  color: #e8edf5;
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+@layer components {
+  .card {
+    @apply rounded-xl border border-white/10 bg-white/[0.03] p-4 shadow-sm;
+  }
+  .input {
+    @apply w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2.5 text-sm text-white placeholder:text-slate-500 outline-none transition focus:border-amber-400/70 focus:ring-1 focus:ring-amber-400/40;
+  }
+  .label {
+    @apply mb-1 block text-xs font-medium uppercase tracking-wide text-slate-400;
+  }
+  .btn-primary {
+    @apply rounded-lg bg-amber-400 px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-amber-300 active:bg-amber-500 disabled:opacity-50;
+  }
+  .btn-ghost {
+    @apply rounded-lg border border-white/15 bg-white/5 px-4 py-2.5 text-sm font-medium text-slate-200 transition hover:bg-white/10 disabled:opacity-50;
+  }
+  .btn-danger {
+    @apply rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-1.5 text-xs font-medium text-red-300 transition hover:bg-red-500/20;
+  }
+  .tab {
+    @apply whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium text-slate-400 transition hover:text-white;
+  }
+  .tab-active {
+    @apply bg-amber-400/15 text-amber-300;
+  }
+  .stat-value {
+    @apply text-2xl font-bold tracking-tight text-white;
+  }
+  .stat-label {
+    @apply text-xs font-medium uppercase tracking-wide text-slate-400;
+  }
+  .table-th {
+    @apply px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-400;
+  }
+  .table-td {
+    @apply border-t border-white/5 px-3 py-2.5 text-sm;
+  }
+}
