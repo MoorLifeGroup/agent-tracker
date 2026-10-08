@@ -25,6 +25,21 @@ export async function ensureSchema() {
   await sql`
     ALTER TABLE users ADD COLUMN IF NOT EXISTS weekly_ap_target NUMERIC NOT NULL DEFAULT 0;
   `;
+  // email added for registration + password resets — backfill safe
+  await sql`
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS email TEXT;
+  `;
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS password_resets (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      token_hash TEXT NOT NULL UNIQUE,
+      expires_at TIMESTAMPTZ NOT NULL,
+      used BOOLEAN NOT NULL DEFAULT false,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+  `;
 
   await sql`
     CREATE TABLE IF NOT EXISTS clients (
