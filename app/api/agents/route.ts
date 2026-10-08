@@ -20,7 +20,7 @@ export async function GET() {
   const d = deny(session);
   if (d) return d;
   const { rows } = await sql`
-    SELECT id, username, display_name, role, active, weekly_ap_target, created_at
+    SELECT id, username, display_name, email, role, active, weekly_ap_target, created_at
     FROM users ORDER BY role DESC, display_name`;
   return NextResponse.json({ agents: rows });
 }

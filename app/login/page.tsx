@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 export default function LoginPage() {
   const [username, setUsername] = useState('');
@@ -79,6 +80,14 @@ export default function LoginPage() {
           <button type="submit" className="btn-primary w-full" disabled={busy}>
             {busy ? 'Signing in…' : 'Sign in'}
           </button>
+          <div className="flex items-center justify-between text-sm">
+            <Link href="/forgot-password" className="text-slate-400 hover:text-amber-300 hover:underline">
+              Forgot password?
+            </Link>
+            <Link href="/register" className="text-amber-300 hover:underline">
+              Create account
+            </Link>
+          </div>
         </form>
       </div>
     </main>
