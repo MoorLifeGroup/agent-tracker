@@ -15,6 +15,9 @@ export default function SalesPage() {
   });
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState('');
+  const [scanning, setScanning] = useState(false);
+  const [scanMsg, setScanMsg] = useState('');
+  const [pendingDocId, setPendingDocId] = useState<number | null>(null);
 
   async function load() {
     const r = await fetch('/api/sales?limit=50');
@@ -22,6 +25,49 @@ export default function SalesPage() {
     setSales(d.sales ?? []);
   }
   useEffect(() => { load(); }, []);
+
+  async function scanDocument(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    setScanning(true);
+    setScanMsg('Reading document…');
+    setMsg('');
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      const r = await fetch('/api/documents', { method: 'POST', body: fd });
+      const d = await r.json();
+      if (!r.ok) {
+        setScanMsg(d.error ?? 'Scan failed');
+        return;
+      }
+      const ex = d.document?.extracted;
+      if (!ex) {
+        setScanMsg('Uploaded, but AI extraction is not configured yet (missing API key).');
+        setPendingDocId(d.document.id);
+        return;
+      }
+      setForm((f) => ({
+        ...f,
+        client_name: ex.client_name ?? f.client_name,
+        carrier: ex.carrier ?? f.carrier,
+        product: ex.product ?? f.product,
+        face_amount: ex.face_amount != null ? String(ex.face_amount) : f.face_amount,
+        monthly_premium: ex.monthly_premium != null ? String(ex.monthly_premium) : f.monthly_premium,
+        sale_date: ex.effective_date ?? f.sale_date,
+        notes: [f.notes, ex.policy_number ? `Policy #: ${ex.policy_number}` : ''].filter(Boolean).join('\n'),
+      }));
+      setPendingDocId(d.document.id);
+      setScanMsg(ex.confidence === 'low'
+        ? 'Scanned — low confidence, please review every field.'
+        : 'Scanned — review the pre-filled fields below.');
+    } catch {
+      setScanMsg('Scan failed — network error.');
+    } finally {
+      setScanning(false);
+    }
+  }
 
   const set = (k: string, v: string) => setForm({ ...form, [k]: v });
   const ap = form.monthly_premium ? Number(form.monthly_premium) * 12 : null;
@@ -40,8 +86,19 @@ export default function SalesPage() {
     });
     setSaving(false);
     if (r.ok) {
+      const d = await r.json();
+      // Link any scanned document to this sale
+      if (pendingDocId && d.id) {
+        await fetch('/api/documents/link', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ document_id: pendingDocId, sale_id: d.id }),
+        });
+        setPendingDocId(null);
+      }
       setMsg('Sale logged — posted to Discord.');
       setForm({ client_name: '', carrier: '', product: '', face_amount: '', monthly_premium: '', source: 'dialed', sale_date: todayISO(), notes: '' });
+      setScanMsg('');
       load();
     } else {
       const d = await r.json();
@@ -62,7 +119,19 @@ export default function SalesPage() {
         <h1 className="mb-4 text-xl font-bold">Sales log</h1>
 
         <div className="card mb-6 space-y-3">
-          <SectionTitle>Log a sale</SectionTitle>
+          <div className="flex items-center justify-between">
+            <SectionTitle>Log a sale</SectionTitle>
+            <label className={`cursor-pointer rounded-lg border border-dashed px-3 py-1.5 text-sm transition ${scanning ? 'border-slate-600 text-slate-500' : 'border-amber-400/50 text-amber-300 hover:bg-amber-400/10'}`}>
+              {scanning ? 'Scanning…' : '📄 Scan document'}
+              <input type="file" accept=".pdf,.png,.jpg,.jpeg,.webp,.heic" className="hidden"
+                disabled={scanning} onChange={scanDocument} />
+            </label>
+          </div>
+          {scanMsg && (
+            <div className="rounded-lg border border-amber-400/30 bg-amber-400/5 px-3 py-2 text-sm text-amber-200">
+              {scanMsg}
+            </div>
+          )}
           <div className="grid grid-cols-2 gap-3">
             <div className="col-span-2 sm:col-span-1">
               <label className="label">Client name *</label>

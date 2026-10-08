@@ -117,6 +117,20 @@ export async function ensureSchema() {
     );
   `;
 
+  await sql`
+    CREATE TABLE IF NOT EXISTS documents (
+      id SERIAL PRIMARY KEY,
+      agent_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      sale_id INTEGER REFERENCES sales(id) ON DELETE SET NULL,
+      filename TEXT NOT NULL,
+      blob_url TEXT NOT NULL,
+      content_type TEXT,
+      size_bytes INTEGER,
+      extracted JSONB,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+  `;
+
   schemaReady = true;
 }
 
